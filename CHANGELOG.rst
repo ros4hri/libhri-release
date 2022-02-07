@@ -2,6 +2,11 @@
 Changelog for package hri
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.1 (2022-02-07)
+------------------
+* add/update BSD license
+* Contributors: Séverin Lemaignan
+
 0.3.0 (2022-02-07)
 ------------------
 * expose enum with the 4 feature types person,face,body,voice
