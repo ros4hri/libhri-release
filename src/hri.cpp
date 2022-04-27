@@ -130,7 +130,7 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
 {
   // update the current list of tracked feature (face, body...) with
   // what has just been received on the respective /tracked topic.
-  
+
   set<ID> new_ids;
   for (auto const& id : tracked->ids)
   {
@@ -193,6 +193,7 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::face:
       for (auto id : to_remove)
       {
+        cout << "removeing face " << id << endl;
         faces.erase(id);
       }
       break;
@@ -224,6 +225,12 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
         auto face = make_shared<Face>(id, node_);
         face->init();
         faces.insert({ id, face });
+
+        // invoke all the callbacks
+        for (auto& cb : face_callbacks)
+        {
+          cb(face);
+        }
       }
       break;
     case FeatureType::body:
@@ -232,6 +239,12 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
         auto body = make_shared<Body>(id, node_);
         body->init();
         bodies.insert({ id, body });
+
+        // invoke all the callbacks
+        for (auto& cb : body_callbacks)
+        {
+          cb(body);
+        }
       }
       break;
     case FeatureType::voice:
@@ -240,6 +253,12 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
         auto voice = make_shared<Voice>(id, node_);
         voice->init();
         voices.insert({ id, voice });
+
+        // invoke all the callbacks
+        for (auto& cb : voice_callbacks)
+        {
+          cb(voice);
+        }
       }
       break;
     case FeatureType::person:
@@ -248,6 +267,12 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
         auto person = make_shared<Person>(id, this, node_);
         person->init();
         persons.insert({ id, person });
+
+        // invoke all the callbacks
+        for (auto& cb : person_callbacks)
+        {
+          cb(person);
+        }
       }
       break;
   }
