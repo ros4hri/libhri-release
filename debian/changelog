@@ -1,0 +1,104 @@
+ros-melodic-hri (0.4.3-1bionic) bionic; urgency=high
+
+  * fix gmock 'Call' syntax for older version of gmock (1.8). This was causing
+    issues on ubuntu 18.04 (ROS melodic)
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Wed, 27 Apr 2022 22:00:00 -0000
+
+ros-melodic-hri (0.4.2-1bionic) bionic; urgency=high
+
+  * add callback support for faces, bodies, voices, persons.
+    Eg, call onFace(cb) to register callback invoked everytime a face is detected
+  * expose the aligned face in the Face class
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Tue, 26 Apr 2022 22:00:00 -0000
+
+ros-melodic-hri (0.4.1-1bionic) bionic; urgency=high
+
+  * Fixed wrong feature subscribers indexing
+  * Contributors: lorenzoferrini
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Sun, 06 Mar 2022 23:00:00 -0000
+
+ros-melodic-hri (0.4.0-1bionic) bionic; urgency=high
+
+  * Facial Landmarks implementation
+    Implementation of methods and structures required to access the
+    facial landmarks
+    Face Landmarks object size correction
+  * add tests for the person.face_id attribute
+  * actually subscribe to the person's face/body/voice id updates
+  * Contributors: Séverin Lemaignan, lorenzoferrini
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Sun, 20 Feb 2022 23:00:00 -0000
+
+ros-melodic-hri (0.3.1-1bionic) bionic; urgency=high
+
+  * add/update BSD license
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Sun, 06 Feb 2022 23:00:00 -0000
+
+ros-melodic-hri (0.3.0-1bionic) bionic; urgency=high
+
+  * expose enum with the 4 feature types person,face,body,voice
+  * add voices and persons + improve const semantics
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Sun, 06 Feb 2022 23:00:00 -0000
+
+ros-melodic-hri (0.2.3-1bionic) bionic; urgency=high
+
+  * Body::{getRoI->roi} + RoI not optional + add Body::cropped
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Thu, 20 Jan 2022 23:00:00 -0000
+
+ros-melodic-hri (0.2.2-1bionic) bionic; urgency=high
+
+  * Face::{getRoI->roi} + RoI not optional + add Face::cropped
+    In the latest revision of the ROS4HRI spec, the region of interest is
+    always expected to be available (as well as the cropped face). As such,
+    no point in using a boost::optional there.
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Thu, 20 Jan 2022 23:00:00 -0000
+
+ros-melodic-hri (0.2.1-1bionic) bionic; urgency=high
+
+  * replace hri_msgs::RegionOfInterestStamped by sensor_msgs::RegionOfInterest
+    Follows changes in hri_msgs 0.2.0
+  * add skeleton of hri::Person class
+  * add empty Voice class
+  * expose the features' topic namespace + doc
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Thu, 13 Jan 2022 23:00:00 -0000
+
+ros-melodic-hri (0.2.0-1bionic) bionic; urgency=high
+
+  * add basic support for bodies; only the RoIs for now
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Tue, 04 Jan 2022 23:00:00 -0000
+
+ros-melodic-hri (0.1.0-1bionic) bionic; urgency=high
+
+  * use boost::optional for faces' features like RoI
+  * doc: setup rosdoc. Run rosdoc_lite . to generate
+  * test: expand the test suite
+  * cmake: explicit SYSTEM headers to avoid ROS shadowing issues
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Tue, 04 Jan 2022 23:00:00 -0000
+
+ros-melodic-hri (0.0.3-1bionic) bionic; urgency=high
+
+  * do not try to compile hri_demo (internal test)
+  * Contributors: Séverin Lemaignan
+
+ -- Séverin Lemaignan <severin.lemaignan@pal-robotics.com>  Tue, 04 Jan 2022 23:00:00 -0000
+
+
