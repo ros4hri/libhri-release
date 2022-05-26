@@ -11,7 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   rosconsole
   roscpp
   std_msgs
-  tf
+  tf2
+  tf2_ros
   cv_bridge
 )
 
@@ -32,7 +33,7 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES hri
-  CATKIN_DEPENDS geometry_msgs hri_msgs rosconsole roscpp std_msgs tf cv_bridge
+  CATKIN_DEPENDS geometry_msgs hri_msgs rosconsole roscpp std_msgs tf2 cv_bridge
 )
 
 add_library(${PROJECT_NAME}
@@ -46,10 +47,13 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#add_executable(${PROJECT_NAME}_demo
-#  src/hri_demo.cpp
-#)
-#target_link_libraries(${PROJECT_NAME}_demo ${PROJECT_NAME} ${catkin_LIBRARIES})
+if(BUILD_EXAMPLES)
+add_executable(show_faces_example
+    examples/show_faces.cpp
+)
+target_link_libraries(show_faces_example ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+endif()
 
 ###########################################################
 # Tests

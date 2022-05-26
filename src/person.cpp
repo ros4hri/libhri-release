@@ -27,13 +27,30 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 
+#include "geometry_msgs/TransformStamped.h"
 #include "hri/person.h"
 
 #include "hri/hri.h"
+#include "std_msgs/Float32.h"
 
 using namespace std;
 using namespace hri;
+
+Person::Person(ID id, const HRIListener* listener, ros::NodeHandle& nh,
+               tf2_ros::Buffer* tf_buffer_ptr, const std::string& reference_frame)
+  : FeatureTracker{ id, nh }
+  , listener_(listener)
+  , _anonymous(false)
+  , _engagement_status(nullptr)
+  , _alias("")
+  , _loc_confidence(0.)
+  , _tf_buffer_ptr(tf_buffer_ptr)
+  , _reference_frame(reference_frame)
+{
+}
+
 
 Person::~Person()
 {
@@ -54,6 +71,21 @@ void Person::init()
   voice_id_subscriber_ = node_.subscribe<std_msgs::String>(
       ns_ + "/voice_id", 1,
       [&](const std_msgs::StringConstPtr msg) { voice_id = msg->data; });
+
+  anonymous_subscriber_ = node_.subscribe<std_msgs::Bool>(
+      ns_ + "/anonymous", 1,
+      [&](const std_msgs::BoolConstPtr msg) { _anonymous = msg->data; });
+
+  alias_subscriber_ = node_.subscribe<std_msgs::String>(
+      ns_ + "/alias", 1, [&](const std_msgs::StringConstPtr msg) { _alias = msg->data; });
+
+  engagement_subscriber_ = node_.subscribe<hri_msgs::EngagementLevel>(
+      ns_ + "/engagement_status", 1,
+      [&](const hri_msgs::EngagementLevelConstPtr msg) { _engagement_status = msg; });
+
+  loc_confidence_subscriber_ = node_.subscribe<std_msgs::Float32>(
+      ns_ + "/location_confidence", 1,
+      [&](const std_msgs::Float32ConstPtr msg) { _loc_confidence = msg->data; });
 }
 
 FaceWeakConstPtr Person::face() const
@@ -78,5 +110,37 @@ VoiceWeakConstPtr Person::voice() const
     return listener_->getVoices()[voice_id];
   else
     return VoiceWeakConstPtr();
+}
+
+boost::optional<EngagementLevel> Person::engagement_status() const
+{
+  if (!_engagement_status)
+    return boost::optional<EngagementLevel>();
+  if (_engagement_status->level == 0)  // UNKNOWN
+    return boost::optional<EngagementLevel>();
+
+  return static_cast<EngagementLevel>(_engagement_status->level);
+}
+
+boost::optional<geometry_msgs::TransformStamped> Person::transform() const
+{
+  if (_loc_confidence == 0)
+  {
+    return boost::optional<geometry_msgs::TransformStamped>();
+  }
+
+  try
+  {
+    auto transform = _tf_buffer_ptr->lookupTransform(_reference_frame, frame(),
+                                                     ros::Time(0), PERSON_TF_TIMEOUT);
+
+    return transform;
+  }
+  catch (tf2::LookupException)
+  {
+    ROS_WARN_STREAM("failed to transform person frame " << frame() << " to " << _reference_frame
+                                                        << ". Are the frames published?");
+    return boost::optional<geometry_msgs::TransformStamped>();
+  }
 }
 
