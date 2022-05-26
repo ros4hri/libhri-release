@@ -35,12 +35,13 @@
 #include <utility>
 #include "hri/body.h"
 #include "hri/face.h"
+#include "hri/person.h"
 #include "hri_msgs/IdsList.h"
 
 using namespace std;
 using namespace hri;
 
-HRIListener::HRIListener()
+HRIListener::HRIListener() : _reference_frame("base_link"), _tf_listener(_tf_buffer)
 {
   init();
 }
@@ -100,14 +101,80 @@ map<ID, VoiceWeakConstPtr> HRIListener::getVoices() const
   return result;
 }
 
-map<ID, PersonConstPtr> HRIListener::getPersons() const
+map<ID, PersonWeakConstPtr> HRIListener::getPersons() const
 {
-  return persons;
+  map<ID, PersonWeakConstPtr> result;
+
+  vector<PersonConstPtr> aliased;
+
+  // creates a map of *weak* pointers from the internally managed list of
+  // shared pointers
+  for (auto const& f : persons)
+  {
+    if (f.second->alias().empty())
+    {
+      result[f.first] = f.second;
+    }
+    else
+    {
+      aliased.push_back(f.second);
+    }
+  }
+
+  for (auto const& p : aliased)
+  {
+    if (result.count(p->alias()) != 0)
+    {
+      result[p->id()] = result[p->alias()];
+    }
+    else  // ouch! the person points to an inexistant alias! this should not happen
+    {
+      assert(false);
+    }
+  }
+
+  return result;
+}
+
+map<ID, PersonWeakConstPtr> HRIListener::getTrackedPersons() const
+{
+  map<ID, PersonWeakConstPtr> result;
+
+  vector<PersonConstPtr> aliased;
+
+  // creates a map of *weak* pointers from the internally managed list of
+  // shared pointers
+  for (auto const& f : tracked_persons)
+  {
+    if (f.second->alias().empty())
+    {
+      result[f.first] = f.second;
+    }
+    else
+    {
+      aliased.push_back(f.second);
+    }
+  }
+
+  for (auto const& p : aliased)
+  {
+    if (result.count(p->alias()) != 0)
+    {
+      result[p->id()] = result[p->alias()];
+    }
+    else  // ouch! the person points to an inexistant alias! this should not happen.
+    {
+      assert(false);
+    }
+  }
+
+  return result;
 }
 
 void HRIListener::init()
 {
   ROS_DEBUG("Initialising the HRI Listener");
+
 
   feature_subscribers_[FeatureType::face] = node_.subscribe<hri_msgs::IdsList>(
       "/humans/faces/tracked", 1,
@@ -121,8 +188,12 @@ void HRIListener::init()
       "/humans/voices/tracked", 1,
       bind(&HRIListener::onTrackedFeature, this, FeatureType::voice, _1));
 
-  feature_subscribers_[FeatureType::person] = node_.subscribe<hri_msgs::IdsList>(
+  feature_subscribers_[FeatureType::tracked_person] = node_.subscribe<hri_msgs::IdsList>(
       "/humans/persons/tracked", 1,
+      bind(&HRIListener::onTrackedFeature, this, FeatureType::tracked_person, _1));
+
+  feature_subscribers_[FeatureType::person] = node_.subscribe<hri_msgs::IdsList>(
+      "/humans/persons/known", 1,
       bind(&HRIListener::onTrackedFeature, this, FeatureType::person, _1));
 }
 
@@ -168,6 +239,12 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
         current_ids.insert(kv.first);
       }
       break;
+    case FeatureType::tracked_person:
+      for (auto const& kv : tracked_persons)
+      {
+        current_ids.insert(kv.first);
+      }
+      break;
   }
 
 
@@ -193,26 +270,89 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::face:
       for (auto id : to_remove)
       {
-        cout << "removeing face " << id << endl;
         faces.erase(id);
+
+        // invoke all the callbacks
+        for (auto& cb : face_lost_callbacks)
+        {
+          cb(id);
+        }
       }
       break;
     case FeatureType::body:
       for (auto id : to_remove)
       {
         bodies.erase(id);
+
+        // invoke all the callbacks
+        for (auto& cb : body_lost_callbacks)
+        {
+          cb(id);
+        }
       }
       break;
     case FeatureType::voice:
       for (auto id : to_remove)
       {
         voices.erase(id);
+
+        // invoke all the callbacks
+        for (auto& cb : voice_lost_callbacks)
+        {
+          cb(id);
+        }
+      }
+      break;
+    case FeatureType::tracked_person:
+      for (auto id : to_remove)
+      {
+        tracked_persons.erase(id);
+
+        // also erase the *aliases* of this ID
+        vector<ID> aliases;
+        for (const auto& p : tracked_persons)
+        {
+          if (p.second->alias() == id)
+          {
+            aliases.push_back(p.first);
+          }
+        }
+        for (auto alias : aliases)
+        {
+          tracked_persons.erase(alias);
+        }
+
+        // invoke all the callbacks
+        for (auto& cb : person_tracked_lost_callbacks)
+        {
+          cb(id);
+        }
       }
       break;
     case FeatureType::person:
       for (auto id : to_remove)
       {
         persons.erase(id);
+
+        // also erase the *aliases* of this ID
+        vector<ID> aliases;
+        for (const auto& p : persons)
+        {
+          if (p.second->alias() == id)
+          {
+            aliases.push_back(p.first);
+          }
+        }
+        for (auto alias : aliases)
+        {
+          persons.erase(alias);
+        }
+
+        // invoke all the callbacks
+        for (auto& cb : person_lost_callbacks)
+        {
+          cb(id);
+        }
       }
       break;
   }
@@ -264,12 +404,26 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::person:
       for (auto id : to_add)
       {
-        auto person = make_shared<Person>(id, this, node_);
+        auto person = make_shared<Person>(id, this, node_, &_tf_buffer, _reference_frame);
         person->init();
         persons.insert({ id, person });
 
         // invoke all the callbacks
         for (auto& cb : person_callbacks)
+        {
+          cb(person);
+        }
+      }
+      break;
+    case FeatureType::tracked_person:
+      for (auto id : to_add)
+      {
+        auto person = make_shared<Person>(id, this, node_, &_tf_buffer, _reference_frame);
+        person->init();
+        tracked_persons.insert({ id, person });
+
+        // invoke all the callbacks
+        for (auto& cb : person_tracked_callbacks)
         {
           cb(person);
         }
