@@ -29,9 +29,15 @@
 #include "hri/face.h"
 
 #include <cv_bridge/cv_bridge.h>
+#include "hri_msgs/SoftBiometrics.h"
 
 using namespace std;
 using namespace hri;
+
+Face::Face(ID id, const ros::NodeHandle& nh)
+  : FeatureTracker(id, nh), softbiometrics_(nullptr)
+{
+}
 
 Face::~Face()
 {
@@ -53,9 +59,11 @@ void Face::init()
   aligned_subscriber_ = node_.subscribe<sensor_msgs::Image>(
       ns_ + "/aligned", 1, bind(&Face::onAligned, this, _1));
 
-
   landmarks_subscriber_ = node_.subscribe<hri_msgs::FacialLandmarks>(
       ns_ + "/landmarks", 1, bind(&Face::onLandmarks, this, _1));
+
+  softbiometrics_subscriber_ = node_.subscribe<hri_msgs::SoftBiometrics>(
+      ns_ + "/softbiometrics", 1, bind(&Face::onSoftBiometrics, this, _1));
 }
 
 void Face::onRoI(sensor_msgs::RegionOfInterestConstPtr roi)
@@ -70,7 +78,7 @@ cv::Rect Face::roi() const
 
 void Face::onCropped(sensor_msgs::ImageConstPtr msg)
 {
-  cropped_ = cv_bridge::toCvShare(msg)->image;
+  cropped_ = cv_bridge::toCvCopy(msg)->image;  // if using toCvShare, the image ends up shared with aligned_!
 }
 
 cv::Mat Face::cropped() const
@@ -80,7 +88,7 @@ cv::Mat Face::cropped() const
 
 void Face::onAligned(sensor_msgs::ImageConstPtr msg)
 {
-  aligned_ = cv_bridge::toCvShare(msg)->image;
+  aligned_ = cv_bridge::toCvCopy(msg)->image;  // if using toCvShare, the image ends up shared with cropped_!
 }
 
 cv::Mat Face::aligned() const
@@ -101,3 +109,26 @@ void Face::onLandmarks(hri_msgs::FacialLandmarksConstPtr msg)
   }
 }
 
+void Face::onSoftBiometrics(hri_msgs::SoftBiometricsConstPtr biometrics)
+{
+  softbiometrics_ = biometrics;
+}
+
+
+boost::optional<float> Face::age() const
+{
+  if (!softbiometrics_)
+    return boost::optional<float>();
+
+  return softbiometrics_->age;
+}
+
+boost::optional<Gender> Face::gender() const
+{
+  if (!softbiometrics_)
+    return boost::optional<Gender>();
+  if (softbiometrics_->gender == 0)  // UNDEFINED
+    return boost::optional<Gender>();
+
+  return static_cast<Gender>(softbiometrics_->gender);
+}
