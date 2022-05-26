@@ -1,3 +1,26 @@
+## libhri (noetic) - 0.5.0-1
+
+The packages in the `libhri` repository were released into the `noetic` distro by running `/usr/bin/bloom-release libhri -r noetic` on `Thu, 26 May 2022 16:19:47 -0000`
+
+The `hri` package was released.
+
+Version of package(s) in repository `libhri`:
+
+- upstream repository: https://github.com/ros4hri/libhri.git
+- release repository: https://github.com/ros4hri/libhri-release.git
+- rosdistro version: `0.4.3-1`
+- old version: `0.4.3-1`
+- new version: `0.5.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.1`
+- catkin_pkg version: `0.5.0`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## libhri (melodic) - 0.5.0-1
 
 The packages in the `libhri` repository were released into the `melodic` distro by running `/usr/bin/bloom-release libhri -r melodic` on `Thu, 26 May 2022 16:18:16 -0000`
