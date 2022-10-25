@@ -2,6 +2,20 @@
 Changelog for package hri
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.3 (2022-10-26)
+------------------
+* bodies: expose the skeleton2d points
+* package.xml: add libhri URL
+* Contributors: Séverin Lemaignan, lorenzoferrini
+
+0.5.2 (2022-10-10)
+------------------
+* expose the 3D transform of the voices
+* expose face + gaze transform
+* expose the 3D transform of the bodies
+* minor refactor for safer access to engagement_status
+* Contributors: Séverin Lemaignan
+
 0.5.1 (2022-08-31)
 ------------------
 * add comparision between 'feature trackers'
