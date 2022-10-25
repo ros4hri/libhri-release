@@ -33,6 +33,13 @@
 using namespace std;
 using namespace hri;
 
+Body::Body(ID id, ros::NodeHandle& nh, tf2_ros::Buffer* tf_buffer_ptr,
+           const std::string& reference_frame)
+  : FeatureTracker{ id, nh }, _tf_buffer_ptr(tf_buffer_ptr), _reference_frame(reference_frame)
+{
+}
+
+
 Body::~Body()
 {
   ROS_DEBUG_STREAM("Deleting body " << id_);
@@ -49,8 +56,10 @@ void Body::init()
 
   cropped_subscriber_ = node_.subscribe<sensor_msgs::Image>(
       ns_ + "/cropped", 1, bind(&Body::onCropped, this, _1));
-}
 
+  skeleton_subscriber_ = node_.subscribe<hri_msgs::Skeleton2D>(
+      ns_ + "/skeleton2d", 1, bind(&Body::onSkeleton, this, _1));
+}
 
 void Body::onRoI(sensor_msgs::RegionOfInterestConstPtr roi)
 {
@@ -72,3 +81,29 @@ cv::Mat Body::cropped() const
   return cropped_;
 }
 
+void Body::onSkeleton(hri_msgs::Skeleton2DConstPtr msg)
+{
+  skeleton_ = msg->skeleton;
+}
+
+std::vector<SkeletonPoint> Body::skeleton() const
+{
+  return skeleton_;
+}
+
+boost::optional<geometry_msgs::TransformStamped> Body::transform() const
+{
+  try
+  {
+    auto transform = _tf_buffer_ptr->lookupTransform(_reference_frame, frame(),
+                                                     ros::Time(0), BODY_TF_TIMEOUT);
+
+    return transform;
+  }
+  catch (tf2::LookupException)
+  {
+    ROS_WARN_STREAM("failed to transform the body frame " << frame() << " to " << _reference_frame
+                                                          << ". Are the frames published?");
+    return boost::optional<geometry_msgs::TransformStamped>();
+  }
+}

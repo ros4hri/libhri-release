@@ -362,7 +362,7 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::face:
       for (auto id : to_add)
       {
-        auto face = make_shared<Face>(id, node_);
+        auto face = make_shared<Face>(id, node_, &_tf_buffer, _reference_frame);
         face->init();
         faces.insert({ id, face });
 
@@ -376,7 +376,7 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::body:
       for (auto id : to_add)
       {
-        auto body = make_shared<Body>(id, node_);
+        auto body = make_shared<Body>(id, node_, &_tf_buffer, _reference_frame);
         body->init();
         bodies.insert({ id, body });
 
@@ -390,7 +390,7 @@ void HRIListener::onTrackedFeature(FeatureType feature, hri_msgs::IdsListConstPt
     case FeatureType::voice:
       for (auto id : to_add)
       {
-        auto voice = make_shared<Voice>(id, node_);
+        auto voice = make_shared<Voice>(id, node_, &_tf_buffer, _reference_frame);
         voice->init();
         voices.insert({ id, voice });
 
