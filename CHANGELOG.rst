@@ -2,6 +2,11 @@
 Changelog for package hri
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.0 (2023-01-05)
+------------------
+* redefine hri::FeatureType enum to be used as bitmask
+* Contributors: Séverin Lemaignan
+
 0.5.3 (2022-10-26)
 ------------------
 * bodies: expose the skeleton2d points
