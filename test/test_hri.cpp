@@ -39,11 +39,11 @@
 #include "hri_msgs/EngagementLevel.h"
 #include "hri_msgs/IdsList.h"
 #include "hri_msgs/LiveSpeech.h"
+#include "hri_msgs/NormalizedRegionOfInterest2D.h"
 #include "hri_msgs/SoftBiometrics.h"
 #include "std_msgs/Float32.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
-#include "sensor_msgs/RegionOfInterest.h"
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 
@@ -52,7 +52,8 @@ using namespace ros;
 using namespace hri;
 
 // waiting time for the libhri callback to process their inputs
-#define WAIT std::this_thread::sleep_for(std::chrono::milliseconds(30))
+#define WAIT std::this_thread::sleep_for(std::chrono::milliseconds(50))
+#define WAIT_LONG std::this_thread::sleep_for(std::chrono::milliseconds(100))
 #define WAIT_DEBUG                                                                       \
   {                                                                                      \
     WAIT;                                                                                \
@@ -143,8 +144,8 @@ TEST(libhri, GetFacesRoi)
 
   auto pub = nh.advertise<hri_msgs::IdsList>("/humans/faces/tracked", 1);
 
-  auto pub_r1 = nh.advertise<sensor_msgs::RegionOfInterest>("/humans/faces/A/roi", 1, true);  // /roi topic is latched
-  auto pub_r2 = nh.advertise<sensor_msgs::RegionOfInterest>("/humans/faces/B/roi", 1, true);  // /roi topic is latched
+  auto pub_r1 = nh.advertise<hri_msgs::NormalizedRegionOfInterest2D>("/humans/faces/A/roi", 1, true);  // /roi topic is latched
+  auto pub_r2 = nh.advertise<hri_msgs::NormalizedRegionOfInterest2D>("/humans/faces/B/roi", 1, true);  // /roi topic is latched
 
   auto ids = hri_msgs::IdsList();
 
@@ -169,7 +170,7 @@ TEST(libhri, GetFacesRoi)
   auto faces = hri_listener.getFaces();
   ASSERT_FALSE(faces["B"].expired());  // face B still exists!
 
-  auto roi = sensor_msgs::RegionOfInterest();
+  auto roi = hri_msgs::NormalizedRegionOfInterest2D();
 
   {
     auto face = faces["B"].lock();
@@ -177,18 +178,18 @@ TEST(libhri, GetFacesRoi)
 
     EXPECT_EQ(face->ns(), "/humans/faces/B");
 
-    EXPECT_EQ(face->roi().width, 0);
+    EXPECT_FLOAT_EQ(face->roi().xmax, 0.);
 
 
-    roi.width = 10;
+    roi.xmax = 0.3;
     pub_r2.publish(roi);
     WAIT;
-    EXPECT_EQ(face->roi().width, 10);
+    EXPECT_FLOAT_EQ(face->roi().xmax, 0.3);
 
-    roi.width = 20;
+    roi.xmax = 0.6;
     pub_r2.publish(roi);
     WAIT;
-    EXPECT_EQ(face->roi().width, 20);
+    EXPECT_FLOAT_EQ(face->roi().xmax, 0.6);
   }
 
   // RoI of face A published *before* face A is published in /faces/tracked,
@@ -206,9 +207,9 @@ TEST(libhri, GetFacesRoi)
     ASSERT_FALSE(face_b == nullptr);
 
     EXPECT_EQ(face_a->ns(), "/humans/faces/A");
-    EXPECT_EQ(face_a->roi().width, 20);
+    EXPECT_FLOAT_EQ(face_a->roi().xmax, 0.6);
     EXPECT_EQ(face_b->ns(), "/humans/faces/B");
-    EXPECT_EQ(face_b->roi().width, 20);
+    EXPECT_FLOAT_EQ(face_b->roi().xmax, 0.6);
   }
 
   spinner.stop();
@@ -530,7 +531,7 @@ TEST(libhri, PersonAttributes)
 
   auto p1 = hri_listener.getTrackedPersons()["p1"].lock();
 
-  ASSERT_FALSE(p1->anonymous()) << "by default, persons are not supposed to be anonymous";
+  ASSERT_FALSE(p1->anonymous()) << "whether a person is anonymous or not has to be explicitely set";
 
   auto face0 = p1->face();
 
@@ -607,8 +608,10 @@ TEST(libhri, AnonymousPersonsAndAliases)
   {
     auto p2 = hri_listener.getTrackedPersons()["p2"].lock();
 
-    ASSERT_FALSE(p1->anonymous());
-    ASSERT_TRUE(p2->anonymous());
+    ASSERT_TRUE(p1->anonymous()); // the anonymous optional flag should have been set
+    ASSERT_TRUE(p2->anonymous()); // the anonymous optional flag should have been set
+    ASSERT_FALSE(*(p1->anonymous()));
+    ASSERT_TRUE(*(p2->anonymous()));
 
     // being anonymous or not should have no impact on face associations
     ASSERT_EQ(p1->face().lock()->id(), "f1");
@@ -726,63 +729,115 @@ TEST(libhri, Callbacks)
   auto person_tracked_pub = nh.advertise<hri_msgs::IdsList>("/humans/persons/tracked", 1);
 
 
-  EXPECT_CALL(face_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(face_lost_callback, Call(testing::_)).Times(0);
+  // uses a workaround to fake interleaving of EXPECT_CALL with function calls, see https://stackoverflow.com/a/60905880
+  uint32_t face_call_count = 0;
+  EXPECT_CALL(face_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&face_call_count](){ face_call_count++; }));
+
+  uint32_t face_lost_call_count = 0;
+  EXPECT_CALL(face_lost_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&face_lost_call_count](){ face_lost_call_count++; }));
+
+  uint32_t body_call_count = 0;
+  EXPECT_CALL(body_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&body_call_count](){ body_call_count++; }));
+
+  uint32_t body_lost_call_count = 0;
+  EXPECT_CALL(body_lost_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&body_lost_call_count](){ body_lost_call_count++; }));
+
+  uint32_t voice_call_count = 0;
+  EXPECT_CALL(voice_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&voice_call_count](){ voice_call_count++; }));
+
+  uint32_t voice_lost_call_count = 0;
+  EXPECT_CALL(voice_lost_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&voice_lost_call_count](){ voice_lost_call_count++; }));
+
+  uint32_t person_call_count = 0;
+  EXPECT_CALL(person_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&person_call_count](){ person_call_count++; }));
+
+  uint32_t person_tracked_call_count = 0;
+  EXPECT_CALL(person_tracked_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&person_tracked_call_count](){ person_tracked_call_count++; }));
+
+  uint32_t person_tracked_lost_call_count = 0;
+  EXPECT_CALL(person_tracked_lost_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&person_tracked_lost_call_count](){ person_tracked_lost_call_count++; }));
+
+
+  // start sequential testing
+  face_call_count = 0;
+  face_lost_call_count = 0;
   ids.ids = { "id1" };
   face_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(face_call_count, 1);
+  EXPECT_EQ(face_lost_call_count, 0);
 
-  WAIT;
 
-  EXPECT_CALL(face_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(face_lost_callback, Call(testing::_)).Times(0);
+  face_call_count = 0;
+  face_lost_call_count = 0;
   ids.ids = { "id1", "id2" };
   face_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(face_call_count, 1);
+  EXPECT_EQ(face_lost_call_count, 0);
 
-  WAIT;
-
-  EXPECT_CALL(face_callback, Call(testing::_)).Times(2);
-  EXPECT_CALL(face_lost_callback, Call(testing::_)).Times(2);
+  face_call_count = 0;
+  face_lost_call_count = 0;
   ids.ids = { "id3", "id4" };
   face_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(face_call_count, 2);
+  EXPECT_EQ(face_lost_call_count, 2);
 
-  WAIT;
-
-  EXPECT_CALL(body_callback, Call(testing::_)).Times(2);
-  EXPECT_CALL(body_lost_callback, Call(testing::_)).Times(0);
+  body_call_count = 0;
+  body_lost_call_count = 0;
   ids.ids = { "id1", "id2" };
   body_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(body_call_count, 2);
+  EXPECT_EQ(body_lost_call_count, 0);
 
-  WAIT;
-
-  EXPECT_CALL(face_callback, Call(testing::_)).Times(2);
-  EXPECT_CALL(face_lost_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(body_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(body_lost_callback, Call(testing::_)).Times(0);
+  face_call_count = 0;
+  face_lost_call_count = 0;
+  body_call_count = 0;
+  body_lost_call_count = 0;
   ids.ids = { "id1", "id2", "id3" };
   face_pub.publish(ids);
   body_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(face_call_count, 2);
+  EXPECT_EQ(face_lost_call_count, 1);
+  EXPECT_EQ(body_call_count, 1);
+  EXPECT_EQ(body_lost_call_count, 0);
 
-  WAIT;
-
-  EXPECT_CALL(face_callback, Call(testing::_)).Times(3);
-  EXPECT_CALL(face_lost_callback, Call(testing::_)).Times(3);
-  EXPECT_CALL(body_callback, Call(testing::_)).Times(3);
-  EXPECT_CALL(body_lost_callback, Call(testing::_)).Times(3);
+  face_call_count = 0;
+  face_lost_call_count = 0;
+  body_call_count = 0;
+  body_lost_call_count = 0;
   ids.ids = { "id5", "id6", "id7" };
   face_pub.publish(ids);
   body_pub.publish(ids);
+  WAIT_LONG;
+  EXPECT_EQ(face_call_count, 3);
+  EXPECT_EQ(face_lost_call_count, 3);
+  EXPECT_EQ(body_call_count, 3);
+  EXPECT_EQ(body_lost_call_count, 3);
 
-  WAIT;
-
-  EXPECT_CALL(voice_callback, Call(testing::_)).Times(2);
-  EXPECT_CALL(person_callback, Call(testing::_)).Times(2);
-  EXPECT_CALL(person_tracked_callback, Call(testing::_)).Times(2);
+  voice_call_count = 0;
+  person_call_count = 0;
+  person_tracked_call_count = 0;
   ids.ids = { "id1", "id2" };
   voice_pub.publish(ids);
   person_pub.publish(ids);
   person_tracked_pub.publish(ids);
-
-  WAIT;
+  WAIT_LONG;
+  EXPECT_EQ(voice_call_count, 2);
+  EXPECT_EQ(person_call_count, 2);
+  EXPECT_EQ(person_tracked_call_count, 2);
 
   spinner.stop();
 }
@@ -993,7 +1048,7 @@ TEST(libhri, SpeechCallbacks)
     auto voice = weak_voice.lock();
     voice->onSpeaking(is_speaking_callback.AsStdFunction());
     voice->onSpeech(speech_callback.AsStdFunction());
-    voice->onIncrementatalSpeech(incremental_speech_callback.AsStdFunction());
+    voice->onIncrementalSpeech(incremental_speech_callback.AsStdFunction());
   });
 
   // testing::MockFunction<void(ID)> voice_lost_callback;
@@ -1007,49 +1062,74 @@ TEST(libhri, SpeechCallbacks)
   auto is_speaking_pub = nh.advertise<std_msgs::Bool>("/humans/voices/id1/is_speaking", 1);
   auto speech_pub = nh.advertise<hri_msgs::LiveSpeech>("/humans/voices/id1/speech", 1);
 
+
+  // uses a workaround to fake interleaving of EXPECT_CALL with function calls, see https://stackoverflow.com/a/60905880
+  uint32_t is_speaking_call_count = 0;
+  EXPECT_CALL(is_speaking_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&is_speaking_call_count](){ is_speaking_call_count++; }));
+
+  uint32_t speech_call_count = 0;
+  EXPECT_CALL(speech_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&speech_call_count](){ speech_call_count++; }));
+
+  uint32_t incremental_speech_call_count = 0;
+  EXPECT_CALL(incremental_speech_callback, Call(testing::_)).WillRepeatedly(
+    testing::InvokeWithoutArgs([&incremental_speech_call_count](){ incremental_speech_call_count++; }));
+
+
+  // start sequential testing
   ids.ids = { "id1" };
   voice_pub.publish(ids);
+  WAIT;
 
-  EXPECT_CALL(is_speaking_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(speech_callback, Call(testing::_)).Times(0);
-  EXPECT_CALL(incremental_speech_callback, Call(testing::_)).Times(0);
+  is_speaking_call_count = 0;
+  speech_call_count = 0;
+  incremental_speech_call_count = 0;
   is_speaking.data = true;
   is_speaking_pub.publish(is_speaking);
-
   WAIT;
+  EXPECT_EQ(is_speaking_call_count, 1);
+  EXPECT_EQ(speech_call_count, 0);
+  EXPECT_EQ(incremental_speech_call_count, 0);
 
-  EXPECT_CALL(is_speaking_callback, Call(testing::_)).Times(1);
+  is_speaking_call_count = 0;
   is_speaking.data = false;
   is_speaking_pub.publish(is_speaking);
-
   WAIT;
+  EXPECT_EQ(is_speaking_call_count, 1);
 
-  EXPECT_CALL(is_speaking_callback, Call(testing::_)).Times(0);
-  EXPECT_CALL(speech_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(incremental_speech_callback, Call(testing::_)).Times(0);
+  is_speaking_call_count = 0;
+  speech_call_count = 0;
+  incremental_speech_call_count = 0;
   speech.final = "final sentence";
   speech.incremental = "";
   speech_pub.publish(speech);
-
   WAIT;
+  EXPECT_EQ(is_speaking_call_count, 0);
+  EXPECT_EQ(speech_call_count, 1);
+  EXPECT_EQ(incremental_speech_call_count, 0);
 
-  EXPECT_CALL(is_speaking_callback, Call(testing::_)).Times(0);
-  EXPECT_CALL(speech_callback, Call(testing::_)).Times(0);
-  EXPECT_CALL(incremental_speech_callback, Call(testing::_)).Times(1);
+  is_speaking_call_count = 0;
+  speech_call_count = 0;
+  incremental_speech_call_count = 0;
   speech.final = "";
   speech.incremental = "incremental sentence";
   speech_pub.publish(speech);
-
   WAIT;
+  EXPECT_EQ(is_speaking_call_count, 0);
+  EXPECT_EQ(speech_call_count, 0);
+  EXPECT_EQ(incremental_speech_call_count, 1);
 
-  EXPECT_CALL(is_speaking_callback, Call(testing::_)).Times(0);
-  EXPECT_CALL(speech_callback, Call(testing::_)).Times(1);
-  EXPECT_CALL(incremental_speech_callback, Call(testing::_)).Times(1);
+  is_speaking_call_count = 0;
+  speech_call_count = 0;
+  incremental_speech_call_count = 0;
   speech.final = "final sentence";
   speech.incremental = "incremental sentence";
   speech_pub.publish(speech);
-
   WAIT;
+  EXPECT_EQ(is_speaking_call_count, 0);
+  EXPECT_EQ(speech_call_count, 1);
+  EXPECT_EQ(incremental_speech_call_count, 1);
 
   spinner.stop();
 }
