@@ -2,6 +2,32 @@
 Changelog for package pyhri
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.5.1 (2024-08-21)
+------------------
+* disable some CMAKE optimization
+  avoid parallel compilation warning with pybind
+* add use_sim_time option to pyhri
+* Contributors: Luka Juricic, Séverin Lemaignan
+
+2.5.0 (2024-08-02)
+------------------
+* readd deprecated function signatures
+* add voice locale
+* add tests for gaze transform
+* fix thread joining in pyhri listener destructor
+* Contributors: Luka Juricic
+
+2.4.1 (2024-06-19)
+------------------
+* add PyHRIListener destructor
+* [doc] minor fixes
+* various improvement to the pyhri documentation
+  running  should yield a correct API documentation
+* Contributors: Luka Juricic, Séverin Lemaignan
+
+2.4.0 (2024-05-13)
+------------------
+
 2.3.0 (2024-03-18)
 ------------------
 * change python module name to hri
