@@ -2,6 +2,12 @@
 Changelog for package hri
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.6.0 (2024-09-09)
+------------------
+* add face expression
+* change build to ament_cmake_auto
+* Contributors: Luka Juricic
+
 2.5.1 (2024-08-21)
 ------------------
 
