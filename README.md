@@ -1,3 +1,28 @@
+## hri (humble) - 2.6.0-1
+
+The packages in the `hri` repository were released into the `humble` distro by running `/usr/bin/bloom-release hri -r humble` on `Mon, 09 Sep 2024 14:36:48 -0000`
+
+These packages were released:
+- `hri`
+- `pyhri`
+
+Version of package(s) in repository `hri`:
+
+- upstream repository: https://github.com/ros4hri/libhri.git
+- release repository: https://github.com/ros4hri/libhri-release.git
+- rosdistro version: `2.5.1-1`
+- old version: `2.5.1-1`
+- new version: `2.6.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.10.7`
+- catkin_pkg version: `0.4.24`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## hri (humble) - 2.5.1-1
 
 The packages in the `hri` repository were released into the `humble` distro by running `/usr/bin/bloom-release hri -r humble` on `Tue, 27 Aug 2024 10:56:52 -0000`
