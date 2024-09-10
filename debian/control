@@ -1,0 +1,12 @@
+Source: ros-humble-pyhri
+Section: misc
+Priority: optional
+Maintainer: Luka Juricic <luka.juricic@pal-robotics.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, python3-numpy, python3-opencv, ros-humble-ament-cmake-auto, ros-humble-ament-cmake-pytest, ros-humble-ament-cmake-python, ros-humble-ament-lint-auto, ros-humble-ament-lint-common, ros-humble-builtin-interfaces, ros-humble-cv-bridge, ros-humble-geometry-msgs, ros-humble-hri, ros-humble-hri-msgs, ros-humble-pybind11-vendor, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-tf2-ros-py, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-pyhri
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, python3-opencv, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-hri, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-ros-workspace
+Description: A python wrapper around hri package
