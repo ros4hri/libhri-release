@@ -16,7 +16,12 @@
 #include <chrono>
 #include <memory>
 
+// jazzy only exposes cv_bridge.hpp, and humble only has cv_bridge.h
+#if __has_include("cv_bridge/cv_bridge.hpp")
+#include "cv_bridge/cv_bridge.hpp"
+#else
 #include "cv_bridge/cv_bridge.h"
+#endif
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "gtest/gtest.h"
 #include "hri/hri.hpp"
@@ -72,7 +77,7 @@ protected:
 
   void spin(std::chrono::nanoseconds hri_timeout = 100ms)
   {
-    hri_executor_->spin_some(hri_timeout);
+    hri_executor_->spin_all(hri_timeout);
   }
 
   const rclcpp::QoS kQoSLatched_{rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable()};

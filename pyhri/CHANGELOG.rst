@@ -2,6 +2,26 @@
 Changelog for package pyhri
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.9.0 (2026-02-03)
+------------------
+* ensure numpy headers are found
+* update URLs and authors in package.xml
+* Contributors: Séverin Lemaignan
+
+2.8.0 (2025-09-10)
+------------------
+* ament_auto_package now requires USE_SCOPED_HEADER_INSTALL_DIR
+* Contributors: Séverin Lemaignan
+
+2.7.0 (2025-06-26)
+------------------
+* re-introduce spin_some as deprecated function
+* in pyhri, spin manually with spin_all instead of spin_some
+* Contributors: Luka Juricic
+
+2.6.2 (2024-10-28)
+------------------
+
 2.6.1 (2024-09-10)
 ------------------
 * bring back dependencies on tf2 and cv_bridge as <depends> so that <build_export_depend> is implied

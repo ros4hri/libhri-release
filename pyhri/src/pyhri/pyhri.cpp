@@ -87,6 +87,11 @@ public:
     }
   }
 
+  void spin_all(std::chrono::nanoseconds timeout)
+  {
+    executor_->spin_all(timeout);
+  }
+
   void spin_some(std::chrono::nanoseconds timeout)
   {
     executor_->spin_some(timeout);
@@ -618,7 +623,7 @@ PYBIND11_MODULE(hri, m) {
     - :py:meth:`on_tracked_person_lost` -- registers a callback function, to be invoked everytime a tracked
       person is lost
     - :py:meth:`set_reference_frame` -- selects the reference frame for all the `transform` properties
-    - :py:meth:`spin_some` -- if the class node does not spin automatically, this function must be called
+    - :py:meth:`spin_all` -- if the class node does not spin automatically, this function must be called
       regularly to manually spin it
     )";
   hri_listener.def(
@@ -693,10 +698,20 @@ PYBIND11_MODULE(hri, m) {
     py::arg("frame"),
     "Selects the reference frame for all the `transform` properties");
   hri_listener.def(
-    "spin_some", &PyHRIListener::spin_some, py::arg("timeout"),
-    "If the class node does not spin automatically, this "
-    "function must be called regularly to "
-    "manually spin it");
+    "spin_all", &PyHRIListener::spin_all, py::arg("timeout"),
+    "If the class node does not spin automatically, "
+    "this function must be called regularly to manually spin it. "
+    "Internally calls rclcpp::executors::SingleThreadedExecutor::spin_all()");
+  hri_listener.def(
+    "spin_some",
+    [](pybind11::object & self, std::chrono::nanoseconds timeout)
+    {
+      PyErr_WarnEx(PyExc_DeprecationWarning, "spin_some() is deprecated", 1);
+      return self.attr("spin_all")(timeout);
+    },
+    py::arg("timeout"),
+    "This function is deprecated, use `spin_all` instead. "
+    "Internally calls rclcpp::executors::SingleThreadedExecutor::spin_some()");
 }  // NOLINT(readability/fn_size)
 
 }  // namespace pyhri

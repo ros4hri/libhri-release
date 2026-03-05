@@ -17,7 +17,12 @@
 #include <functional>
 #include <string>
 
+// jazzy only exposes cv_bridge.hpp, and humble only has cv_bridge.h
+#if __has_include("cv_bridge/cv_bridge.hpp")
+#include "cv_bridge/cv_bridge.hpp"
+#else
 #include "cv_bridge/cv_bridge.h"
+#endif
 #include "hri_msgs/msg/normalized_region_of_interest2_d.hpp"
 #include "hri_msgs/msg/skeleton2_d.hpp"
 #include "opencv2/core.hpp"
@@ -72,6 +77,7 @@ Body::~Body()
 {
   RCLCPP_DEBUG_STREAM(
     node_interfaces_.get_node_logging_interface()->get_logger(), "Deleting body " << kId_);
+  invalidate();
 }
 
 void Body::onRoI(const hri_msgs::msg::NormalizedRegionOfInterest2D::ConstSharedPtr msg)
