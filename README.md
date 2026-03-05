@@ -1,3 +1,28 @@
+## hri (rolling) - 2.9.0-1
+
+The packages in the `hri` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --new-track --rosdistro rolling --track rolling hri` on `Thu, 05 Mar 2026 09:34:10 -0000`
+
+These packages were released:
+- `hri`
+- `pyhri`
+
+Version of package(s) in repository `hri`:
+
+- upstream repository: https://github.com/ros4hri/libhri.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `2.9.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.13.0`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## hri (humble) - 2.6.1-1
 
 The packages in the `hri` repository were released into the `humble` distro by running `/usr/bin/bloom-release hri -r humble` on `Tue, 10 Sep 2024 05:40:05 -0000`
