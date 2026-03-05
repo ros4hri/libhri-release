@@ -1,0 +1,12 @@
+Source: ros-rolling-pyhri
+Section: misc
+Priority: optional
+Maintainer: Luka Juricic <luka.juricic@pal-robotics.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, python3-numpy, python3-numpy <!nocheck>, python3-opencv, python3-opencv <!nocheck>, ros-rolling-ament-cmake-auto, ros-rolling-ament-cmake-pytest <!nocheck>, ros-rolling-ament-cmake-python, ros-rolling-ament-lint-auto <!nocheck>, ros-rolling-ament-lint-common <!nocheck>, ros-rolling-builtin-interfaces, ros-rolling-cv-bridge <!nocheck>, ros-rolling-geometry-msgs, ros-rolling-geometry-msgs <!nocheck>, ros-rolling-hri, ros-rolling-hri-msgs <!nocheck>, ros-rolling-pybind11-vendor, ros-rolling-rclcpp, ros-rolling-rclpy, ros-rolling-sensor-msgs <!nocheck>, ros-rolling-std-msgs <!nocheck>, ros-rolling-tf2-ros-py <!nocheck>, ros-rolling-ros-workspace
+Homepage: https://ros4hri.github.io/pyhri
+Standards-Version: 3.9.2
+
+Package: ros-rolling-pyhri
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, python3-numpy, python3-opencv, ros-rolling-builtin-interfaces, ros-rolling-geometry-msgs, ros-rolling-hri, ros-rolling-rclcpp, ros-rolling-rclpy, ros-rolling-ros-workspace
+Description: A python wrapper around hri package
