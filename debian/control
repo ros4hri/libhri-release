@@ -1,0 +1,12 @@
+Source: ros-jazzy-hri
+Section: misc
+Priority: optional
+Maintainer: Séverin Lemaignan <severin.lemaignan@pal-robotics.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, ros-jazzy-ament-cmake-auto, ros-jazzy-ament-cmake-gtest <!nocheck>, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-cv-bridge, ros-jazzy-geometry-msgs, ros-jazzy-magic-enum, ros-jazzy-rclcpp, ros-jazzy-rclcpp-lifecycle, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-tf2, ros-jazzy-tf2-ros, socialminds-ros-jazzy-hri-msgs, ros-jazzy-ros-workspace
+Homepage: https://ros4hri.github.io/libhri
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-hri
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, ros-jazzy-cv-bridge, ros-jazzy-geometry-msgs, ros-jazzy-rclcpp, ros-jazzy-rclcpp-lifecycle, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-tf2, ros-jazzy-tf2-ros, socialminds-ros-jazzy-hri-msgs, ros-jazzy-ros-workspace
+Description: A wrapper library around the ROS4HRI ROS topics
