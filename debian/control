@@ -1,0 +1,12 @@
+Source: ros-jazzy-pyhri
+Section: misc
+Priority: optional
+Maintainer: Luka Juricic <luka.juricic@pal-robotics.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, python3-numpy, python3-numpy <!nocheck>, python3-opencv, python3-opencv <!nocheck>, ros-jazzy-ament-cmake-auto, ros-jazzy-ament-cmake-pytest <!nocheck>, ros-jazzy-ament-cmake-python, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-builtin-interfaces, ros-jazzy-cv-bridge <!nocheck>, ros-jazzy-geometry-msgs, ros-jazzy-geometry-msgs <!nocheck>, ros-jazzy-hri, ros-jazzy-hri-msgs <!nocheck>, ros-jazzy-pybind11-vendor, ros-jazzy-rclcpp, ros-jazzy-rclpy, ros-jazzy-sensor-msgs <!nocheck>, ros-jazzy-std-msgs <!nocheck>, ros-jazzy-tf2-ros-py <!nocheck>, ros-jazzy-ros-workspace
+Homepage: https://ros4hri.github.io/pyhri
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-pyhri
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, python3-numpy, python3-opencv, ros-jazzy-builtin-interfaces, ros-jazzy-geometry-msgs, ros-jazzy-hri, ros-jazzy-rclcpp, ros-jazzy-rclpy, ros-jazzy-ros-workspace
+Description: A python wrapper around hri package
